@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "WiFiService.h"
+#include <ESPAsyncWebServer.h>
 
 void WiFiService::init(WiFiSettings settings){
     WiFi.disconnect();
@@ -36,11 +37,18 @@ void WiFiService::init(WiFiSettings settings){
     }
 }
 
-void WiFiService::connect(WiFiSettings settings){
+String WiFiService::networksFind(){
+    String networks;
+    byte numSsid = WiFi.scanNetworks();
+    DynamicJsonDocument doc(1024);
+    JsonObject jsonObj = doc.to<JsonObject>();
 
-}
-WiFiService::WiFiService(){
-}
+    for (int i = 0; i < (int)numSsid; i++){
+        jsonObj["available_networks"][String(i)] = WiFi.SSID(i);
+    }
+    serializeJson(jsonObj, networks);
+    return networks;
+};
 
 
 WiFiService ACRemWiFi;

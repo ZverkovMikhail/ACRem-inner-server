@@ -7,11 +7,9 @@
 
 class WiFiService{
 private:
-    void connect(WiFiSettings settings);
-public:
-    WiFiService();
-    // void begin();    
+public: 
     void init(WiFiSettings settings);
+    String networksFind();
 };
 
 extern WiFiService ACRemWiFi;
