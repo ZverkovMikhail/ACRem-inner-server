@@ -6,6 +6,8 @@
 
 const int BUTTON_INPUT = 4;
 bool isClick = false;
+ACStatus actualStatus;
+
 
 mqtt_status_callback status_callback = [](ACStatus stat){
   String jstr;
@@ -15,20 +17,24 @@ mqtt_status_callback status_callback = [](ACStatus stat){
   Serial.printf("main::status_callback = %d\n", stat.temp);
   Serial.printf("main::status_callback = %d\n", stat.fan);
   Serial.printf("main::status_callback = %d\n", stat.swing_v);
+  actualStatus = stat;
   DisPlay.output_status(stat);
+  MQTT.sendStatus(&stat);
 };
  settings_wifi_callback settings_get_callBack = [](WiFiSettings sett){
     Serial.println("main::settings_get_callBack");
-     
-    Serial.println(String(sett.wifi_mode));  
-    Serial.println(sett.wifi_AP_ssid);    
-    Serial.println(sett.wifi_AP_pass);    
-    Serial.println(sett.wifi_conn_ssid);    
-    Serial.println(sett.wifi_conn_pass); 
     
+    wifiConnected wifiCallback = [sett](){    
+
+        if (sett.wifi_mode == WIFI_STA){      
+            MQTT.init("acrem-broker.chescat.pro", &actualStatus);
+        }      
+        LocalAdminServer.init();
+    };
+    ACRemWiFi.setConnectedCallback(wifiCallback);
     ACRemWiFi.init(sett);  
-    LocalAdminServer.init();
-    MQTT.init("192.168.0.153");
+
+    
   };
   
    settings_wifi_callback settings_change_callBack = [](WiFiSettings sett){
@@ -46,23 +52,23 @@ void setup() {
   while (!Serial) 
     delay(50);
   Serial.println("setup");
+  configTime(8 * 3600, 0, "pool.ntp.org", "time.nist.gov");
   DisPlay.init();
   DB.init_db();
   Settings.getWiFiSettings(settings_get_callBack);
   Settings.changeWiFiSettingsEvent(settings_change_callBack);
+      actualStatus.power = on;
+      actualStatus.mode = Auto;
+      actualStatus.temp = 20;
+      actualStatus.fan = Quiet;
+      actualStatus.swing_v = Highest;
   MQTT.setStatusCallback(status_callback);
 }
 
 void loop() {
   if(digitalRead(BUTTON_INPUT) == LOW){
     if(!isClick){
-      ACStatus stat;
-      stat.power = on;
-      stat.mode = Auto;
-      stat.temp = 10;
-      stat.fan = Quiet;
-      stat.swing_v = Highest;
-      MQTT.sendStatus(stat);
+      ACRemWiFi.setDefaultSettings();
       isClick = true;
       }
    
@@ -71,4 +77,5 @@ void loop() {
     isClick = false;
   }
   MQTT.loop();
+  ACRemWiFi.loop();
 }

@@ -43,22 +43,25 @@ struct ACStatus{
     void getJsonStr(String& buf){
       DynamicJsonDocument doc(1024);
       JsonObject jsonObj = doc.to<JsonObject>();
-      jsonObj["status"]["power"] = power;
-      jsonObj["status"]["mode"] = mode;
-      jsonObj["status"]["temp"] = temp;
-      jsonObj["status"]["fan"] = fan;
-      jsonObj["status"]["swing_v"] = swing_v;
+      jsonObj["power"] = power;
+      jsonObj["mode"] = mode;
+      jsonObj["temp"] = temp;
+      jsonObj["fan"] = fan;
+      jsonObj["swing_v"] = swing_v;
       serializeJson(jsonObj, buf);
    }
      void setJson(String json){
       DynamicJsonDocument doc(1024);
-      Serial.printf("setJson::json = %s\n", json);
       deserializeJson(doc, json);
-      power = doc["status"]["power"].as<Power>();
-      mode = doc["status"]["mode"].as<Mode>();
-      temp = doc["status"]["temp"].as<int>();
-      fan = doc["status"]["fan"].as<Fan>();
-      swing_v = doc["status"]["swing_v"].as<Swing_v>();
+      setJson(doc);
+      
+   }
+   void setJson(DynamicJsonDocument json){
+        power = json["status"]["power"].as<Power>();
+        mode = json["status"]["mode"].as<Mode>();
+        temp = json["status"]["temp"].as<int>();
+        fan = json["status"]["fan"].as<Fan>();
+        swing_v = json["status"]["swing_v"].as<Swing_v>();
    }
 };
 #endif
