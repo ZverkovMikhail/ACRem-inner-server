@@ -27,6 +27,14 @@ void indexPage(AsyncWebServerRequest *request) {
     Serial.println(request->url().c_str());
     request->send_P(200, "text/html", index_html, processor);
 }
+void wifiSettingsPage(AsyncWebServerRequest *request) {
+    Serial.println(request->url().c_str());
+    request->send_P(200, "text/html", wifi_html, processor);
+}
+void mqttSettingsPage(AsyncWebServerRequest *request) {
+    Serial.println(request->url().c_str());
+    request->send_P(200, "text/html", mqtt_html, processor);
+}
 
 void action(AsyncWebServerRequest *request)
 {

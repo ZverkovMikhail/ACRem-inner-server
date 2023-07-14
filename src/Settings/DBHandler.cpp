@@ -39,22 +39,20 @@ void DBHandler::init_db(){
         sqlite3_initialize();
         int rc = db_open("/spiffs/ACdb.db", &db);
         if (rc == SQLITE_OK){
-            rc = tableSettingsExists(db);
-            
+            rc = tableSettingsExists(db, "wifi");
             if (rc != SQLITE_OK){
                 rc = createTableSettings(db);
                 rc = setInitSettings("wifi");
-                
-                if (rc != SQLITE_OK){
                 sqlite3_close(db);
                 return;
                 }
-                }
+            }
+            tableSettingsExists(db, "mqtt");
         }
 
         
         // sqlite3_close(db);
-}
+
 
 void DBHandler::removeDB(){
     sqlite3_close(db);
@@ -62,19 +60,25 @@ void DBHandler::removeDB(){
     SPIFFS.remove("/ACdb.db");
     delay(500);
 }
-int DBHandler::tableSettingsExists(sqlite3 *db){
+int DBHandler::tableSettingsExists(sqlite3 *db, const char *key){
         // int (DBHandler::*)(const char*);
         // func = setDefaultSettings;
+        _keyBuf = key;
         sqlite3_callback _callback = [](void *data, int argc, char **argv, char **azColName)->int {
                 char* count = argv[0];
+                const char *key = ((DBHandler *) data)->_keyBuf;
+                Serial.println(atoi(count));
                 if (atoi(count) < 1){
-                    ((DBHandler *) data)->setInitSettings("wifi");
+                    ((DBHandler *) data)->setInitSettings(key);
                 }
                 
                 return 0;
         };
-        
-        int rc = sqlite3_exec(db, "SELECT COUNT(*) FROM Settings WHERE key = 'wifi';", _callback, (void *)this, &zErrMsg);
+        String sql = F("SELECT COUNT(*) FROM Settings WHERE key='");
+        sql+=F(key);
+        sql+=F("';");
+        // int rc = sqlite3_exec(db, "SELECT COUNT(*) FROM Settings WHERE key = 'wifi';", _callback, (void *)this, &zErrMsg);
+        int rc = sqlite3_exec(db, sql.c_str(), _callback, (void *)this, &zErrMsg);
         if (rc != SQLITE_OK)
         {
             Serial.printf("Таблицы Settings не существует\n");
@@ -107,13 +111,15 @@ int DBHandler::createTableSettings(sqlite3 *db){
         sql+=F(key);
         sql+=F("';");
         sqlite3_callback _callback = [](void *data, int argc, char **argv, char **azColName)->int {
-            
             jsonValsCallback *call = reinterpret_cast<jsonValsCallback*>(data);
-            char* vals = argv[0];
+            char* vals = argv[0];            
+            Serial.print("vals = ");
+            Serial.println(vals);
             (*call)(vals);
             return 0;  
         };
-
+        Serial.print("DBHandler::getSettingValues = ");
+        Serial.println(sql);
         int rc = sqlite3_exec(db, sql.c_str(), _callback, (void *)callback, &zErrMsg);
         if (rc != SQLITE_OK)
         {
@@ -145,16 +151,25 @@ int DBHandler::createTableSettings(sqlite3 *db){
         }
    }
    int DBHandler::setInitSettings(const char* key){
-    int rc = -1;
-
-    if (strcmp(key, "wifi") == 0){        
+        int rc = -1;
+        String json;
+        Serial.print("DBHandler::setInitSettings = ");
+        Serial.println(key);
+        if (strcmp(key, "wifi") == 0){        
             WiFiSettings sett;
-            String json;
             sett.getDefault().getJsonStr(json);
-            String sql = F("INSERT INTO Settings VALUES ('wifi', '");
+            
+        }else if (strcmp(key, "mqtt") == 0){
+            MQTTSettings sett;
+            sett.getDefault().getJsonStr(json);
+
+        }
+            String sql = F("INSERT INTO Settings VALUES ('");
+            sql +=  key; 
+            sql += F("', '");
             sql += json;
             sql += F("');");
-            
+    
             rc = sqlite3_exec(db, sql.c_str(), NULL, NULL, &zErrMsg);
 
             if (rc != SQLITE_OK)
@@ -167,7 +182,6 @@ int DBHandler::createTableSettings(sqlite3 *db){
                 Serial.printf("Таблица Settings наполнена начальными данными\n");
             }
        
-    }
             return rc;
    }
    int DBHandler::setDefaultSettings(const char* key){

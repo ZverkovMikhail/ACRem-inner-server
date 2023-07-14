@@ -7,7 +7,7 @@
 // #include "ACControl/ACHandler.h"
 // #define ARDUINOJSON_DECODE_UNICODE = 0;
 AsyncWebServer _server(80);
-AsyncWebSocket _ws("/wifi_settings");
+AsyncWebSocket _ws("/settings");
 
 extern AsyncWebSocketClient *wsClient;
 AdminWebServer::AdminWebServer(){
@@ -23,14 +23,21 @@ AwsEventHandler AdminWebServer::wsOnEvent(){
     // JsonObject jsonObj = doc.to<JsonObject>();
     Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
 
-    settings_wifi_callback callback = [client](WiFiSettings values){
+    settings_wifi_callback wifiCallback = [client](WiFiSettings values){
       String buf;
       values.getJsonStr(buf);
       Serial.println("WS_EVT_CONNECT");
       Serial.println(buf);
       _ws.textAll(buf);
     };
-    Settings.getWiFiSettings(callback);
+    Settings.getWiFiSettings(wifiCallback);
+
+        settings_mqtt_callback mqttCallback = [client](MQTTSettings values){
+      String buf;
+      values.getJsonStr(buf);
+      _ws.textAll(buf);
+    };
+    Settings.getMQTTSettings(mqttCallback);
     
   } else if(type == WS_EVT_DISCONNECT){
     //client disconnected
@@ -59,6 +66,14 @@ AwsEventHandler AdminWebServer::wsOnEvent(){
           sendMessegeForAll("Новые настройки были сохранены! <br> Для вступления настроек в силу, требуется перезапустить сервер!");
           
         }
+        if (doc.containsKey("mqtt")){
+          MQTTSettings sett;
+          String settJson = doc.as<String>();
+          sett.setJson(settJson);
+          Settings.setMQTTSettings(sett);
+          _ws.textAll(settJson);
+          sendMessegeForAll("Новые настройки были сохранены! <br> Для вступления настроек в силу, требуется перезапустить сервер!");
+        }    
         if (doc.containsKey("cmd")){
           if(doc["cmd"] == "r")
             ACRemWiFi.init(Settings.getActualSettings());
@@ -73,6 +88,7 @@ return wsSettingsHandler;
 }
 
 void AdminWebServer::init(){
+  Serial.println("AdminWebServer::init");
     initRoutes(_server);
     _ws.onEvent(wsOnEvent());
     _server.addHandler(&_ws);

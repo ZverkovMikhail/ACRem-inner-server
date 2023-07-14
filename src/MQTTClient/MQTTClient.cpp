@@ -9,14 +9,10 @@ void MQTTClient::reconnect() {
     if( millis() - beforTimeReconnect >= 5000){
         beforTimeReconnect = millis();
     Serial.println("Attempting MQTT connection.");
-    String clientId = "8K0toETbcxrYTyQa";
-    String clientName = "8K0toETbcxrYTyQa";
-    String password = "5006dude";
-    String userName = "rmsNJtrAtH6kkMBT";
     // Attempt to connect
-    if (client.connect(clientId.c_str(), clientName.c_str(), password.c_str())) {
-      client.subscribe("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/#");
-      sendConnected(clientName);
+    if (client.connect(_settings.dev_key.c_str(), _settings.dev_key.c_str(), _settings.user_password.c_str())) {
+      client.subscribe((_settings.user_key + F("/") + _settings.dev_key + F("/#")).c_str());
+      sendConnected(_settings.dev_key);
       sendStatus(actualStatus);
       
     } else {
@@ -27,9 +23,10 @@ void MQTTClient::reconnect() {
     }
 }
 
-void MQTTClient::init(const char* mqtt_server_addr, ACStatus *actStat){
+void MQTTClient::init(const char* mqtt_server_addr, MQTTSettings settings, ACStatus *actStat){
   Serial.println("MQTTClient::init");
     actualStatus = actStat;
+    _settings = settings;
     beforTime = millis();
 static const char isrg_root_x1[] PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
@@ -107,23 +104,29 @@ void MQTTClient::loop(){
         client.loop();
     }
 }
-
+void MQTTClient::sendToServer(const char *endPoint, const char *msg){
+  client.publish((_settings.user_key + F("/") + _settings.dev_key + F("/") + endPoint).c_str(), msg);
+}
 void MQTTClient::sendStatus(ACStatus *stat){
     String status;
     stat->getJsonStr(status);
-    client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/status", status.c_str());
+    sendToServer("status", status.c_str());
+    // client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/status", status.c_str());
 }
 void MQTTClient::amilive(){
-    client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/amilive", "true");
+    sendToServer("amilive", "true");
+    // client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/amilive", "true");
 }
 void MQTTClient::sendConnected(String name){
-    client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/connected", "true");
+    sendToServer("connected", "true");
+    // client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/connected", "true");
 }
 void MQTTClient::sendSysMsg(String msg){
     String buf = "{\"system\":\"";
     buf += msg;
     buf += "\"}";
-    client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/sys", buf.c_str());
+    sendToServer("sys", buf.c_str());
+    // client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/sys", buf.c_str());
 }
 void MQTTClient::setStatusCallback(mqtt_status_callback callback){
     _statusCallback = callback;

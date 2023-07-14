@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ACStatus.h>
+#include <Settings/SettingsHandler.h>
 
 typedef std::function<void(ACStatus stat)> mqtt_status_callback;
 class MQTTClient
@@ -17,10 +18,12 @@ private:
     char msg[50];
     int value = 0;
     bool inited = false;
+    MQTTSettings _settings;
+    void sendToServer(const char *endPoint, const char *msg);
     void reconnect();
 public:
     ACStatus *actualStatus;
-    void init(const char* mqtt_server_addr, ACStatus *actStat);
+    void init(const char* mqtt_server_addr, MQTTSettings settings, ACStatus *actStat);
     void sendStatus(ACStatus *stat);    
     void sendSysMsg(String msg);
     void setStatusCallback(mqtt_status_callback callback);

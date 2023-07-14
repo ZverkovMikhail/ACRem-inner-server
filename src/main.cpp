@@ -2,6 +2,7 @@
 #include <Settings/SettingsHandler.h>
 #include <WiFi/WiFiService.h>
 #include <AdminWebServer/AdminWebServer.h>
+#include <Settings/SettingsHandler.h>
 #include <MQTTClient/MQTTClient.h>
 
 const int BUTTON_INPUT = 4;
@@ -21,15 +22,18 @@ mqtt_status_callback status_callback = [](ACStatus stat){
   DisPlay.output_status(stat);
   MQTT.sendStatus(&stat);
 };
- settings_wifi_callback settings_get_callBack = [](WiFiSettings sett){
+ settings_wifi_callback wifi_settings_get_callBack = [](WiFiSettings sett){
     Serial.println("main::settings_get_callBack");
     
     wifiConnected wifiCallback = [sett](){    
-
-        if (sett.wifi_mode == WIFI_STA){      
-            MQTT.init("acrem-broker.chescat.pro", &actualStatus);
-        }      
-        LocalAdminServer.init();
+      settings_mqtt_callback mqtt_settings_get_callBack = [sett](MQTTSettings settings){
+          
+          if (sett.wifi_mode == WIFI_STA){                
+            MQTT.init("acrem-broker.chescat.pro", settings, &actualStatus);
+          }      
+      };
+      Settings.getMQTTSettings(mqtt_settings_get_callBack);
+      LocalAdminServer.init();
     };
     ACRemWiFi.setConnectedCallback(wifiCallback);
     ACRemWiFi.init(sett);  
@@ -55,7 +59,7 @@ void setup() {
   configTime(8 * 3600, 0, "pool.ntp.org", "time.nist.gov");
   DisPlay.init();
   DB.init_db();
-  Settings.getWiFiSettings(settings_get_callBack);
+  Settings.getWiFiSettings(wifi_settings_get_callBack);
   Settings.changeWiFiSettingsEvent(settings_change_callBack);
       actualStatus.power = on;
       actualStatus.mode = Auto;

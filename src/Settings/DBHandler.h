@@ -13,9 +13,9 @@ private:
     sqlite3 *db;
     char *zErrMsg = 0;
     int db_open(const char *filename, sqlite3 **db); 
-    int tableSettingsExists(sqlite3 *db);
+    int tableSettingsExists(sqlite3 *db, const char *key);
     int createTableSettings(sqlite3 *db);
-
+    const char *_keyBuf; 
     // int db_exec(sqlite3 *db, const char *sql);
 public:
     void init_db();

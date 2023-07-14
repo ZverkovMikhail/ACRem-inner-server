@@ -1,5 +1,4 @@
 #include <ArduinoJson.h>
-
 struct MQTTSettings
 {
    String user_key;
@@ -26,6 +25,13 @@ struct MQTTSettings
       user_key = doc["mqtt"]["user_key"].as<String>();
       user_password = doc["mqtt"]["user_password"].as<String>();
       dev_key = doc["mqtt"]["dev_key"].as<String>();
+   }
+      MQTTSettings getDefault(){
+      MQTTSettings sett;
+      sett.user_key = "";
+      sett.user_password = "";
+      sett.dev_key = "";
+      return sett;
    }
    String toString(){
       String ret = F("user_key = "); 

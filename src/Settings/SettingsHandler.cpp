@@ -34,9 +34,36 @@ void SettingsHandler::setWiFiSettings(WiFiSettings vals){
     };
     getWiFiSettings(call);
 }
+void SettingsHandler::getMQTTSettings(settings_mqtt_callback callback){
+    Serial.println("SettingsHandler::getMQTTSettings");  
+    jsonValsCallback call = [this, callback](const char *jsonVals){        
+        MQTTSettings settings; 
+        settings.setJson(jsonVals);
+        callback(settings);
+    };
+    DB.getSettingValues("mqtt", &call);
+}
+
+void SettingsHandler::setMQTTSettings(MQTTSettings vals){
+    Serial.println("SettingsHandler::setMQTTSettings");  
+    settings_mqtt_callback call = [this, &vals](MQTTSettings values){   
+        String buf;
+        vals.getJsonStr(buf);     
+        if(vals != values){
+            DB.setSettingValues("mqtt", buf.c_str());
+            if(_changeMQTTHandler){
+                _changeMQTTHandler(vals);
+            }
+        }
+    };
+    getMQTTSettings(call);
+}
 
 void SettingsHandler::changeWiFiSettingsEvent(settings_wifi_callback callback){
     _changeWiFiHandler = callback;
+}
+void SettingsHandler::changeMQTTSettingsEvent(settings_mqtt_callback callback){
+    _changeMQTTHandler = callback;
 }
 
 void SettingsHandler::recreate(){
