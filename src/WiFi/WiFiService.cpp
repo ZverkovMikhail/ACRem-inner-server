@@ -31,12 +31,6 @@ void WiFiService::loop(){
                     DisPlay.tryConnectionStaScreen(_settings.wifi_conn_ssid, ++tryCount);
             }else{
                     tryCount = 0;
-                // DisPlay.tryConnectionFailed(settings.wifi_conn_ssid);
-                // WiFiSettings sett;
-                // sett = sett.getDefault();
-                // Settings.setWiFiSettings(sett);
-                // init(sett);
-                // return;
             }
         }
         if (!connected && (WiFi.status() == WL_CONNECTED)){

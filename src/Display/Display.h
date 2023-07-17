@@ -20,7 +20,6 @@ class Display{
     void connectionAPScreen(String wifi_AP_ssid, String wifi_AP_pass, String ip);
     void connectionStaScreen(String wifi_ssid, String ip);
     void tryConnectionStaScreen(String wifi_ssid, int count);
-    void tryConnectionFailed(String wifi_ssid);
     void output_status(ACStatus status);
 
   private:

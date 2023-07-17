@@ -84,21 +84,6 @@ void Display::tryConnectionStaScreen(String wifi_ssid, int count){
       ->print();
 }
 
-void Display::tryConnectionFailed(String wifi_ssid){
-    setLine(DisPlay.FIRST, "Connection to")
-      ->setLine(DisPlay.SECOND, wifi_ssid)
-      ->setLine(DisPlay.THIRD, "")
-      ->setLine(DisPlay.FOURTH, "!!! Failed !!!")
-      ->print();
-    delay(5000);
-    setLine(DisPlay.FIRST, "Restarting... ")
-      ->setLine(DisPlay.SECOND, "with default")
-      ->setLine(DisPlay.THIRD, "network")
-      ->setLine(DisPlay.FOURTH, "settings")
-      ->print();
-    delay(5000);
-}
-
 void Display::u8g2_prepare(void)
 {
       u8g2.setFont(u8g2_font_8x13B_tf);
