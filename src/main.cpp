@@ -55,11 +55,11 @@ void setup() {
   DB.init_db();
   Settings.getWiFiSettings(wifi_settings_get_callBack);
   Settings.changeWiFiSettingsEvent(settings_change_callBack);
-      actualStatus.power = on;
+      actualStatus.power = off;
       actualStatus.mode = Auto;
       actualStatus.temp = 20;
       actualStatus.fan = Quiet;
-      actualStatus.swing_v = Highest;
+      actualStatus.swing_v = Auto_swing;
   MQTT.setStatusCallback(status_callback);
 }
 
