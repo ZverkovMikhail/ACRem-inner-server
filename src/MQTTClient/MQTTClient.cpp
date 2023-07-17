@@ -111,22 +111,18 @@ void MQTTClient::sendStatus(ACStatus *stat){
     String status;
     stat->getJsonStr(status);
     sendToServer("status", status.c_str());
-    // client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/status", status.c_str());
 }
 void MQTTClient::amilive(){
     sendToServer("amilive", "true");
-    // client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/amilive", "true");
 }
 void MQTTClient::sendConnected(String name){
     sendToServer("connected", "true");
-    // client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/connected", "true");
 }
 void MQTTClient::sendSysMsg(String msg){
     String buf = "{\"system\":\"";
     buf += msg;
     buf += "\"}";
     sendToServer("sys", buf.c_str());
-    // client.publish("rmsNJtrAtH6kkMBT/8K0toETbcxrYTyQa/sys", buf.c_str());
 }
 void MQTTClient::setStatusCallback(mqtt_status_callback callback){
     _statusCallback = callback;

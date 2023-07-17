@@ -13,13 +13,12 @@ ACStatus actualStatus;
 mqtt_status_callback status_callback = [](ACStatus stat){
   String jstr;
   stat.getJsonStr(jstr);
-  Serial.printf("main::status_callback = %d\n", stat.power);
-  Serial.printf("main::status_callback = %d\n", stat.mode);
-  Serial.printf("main::status_callback = %d\n", stat.temp);
-  Serial.printf("main::status_callback = %d\n", stat.fan);
-  Serial.printf("main::status_callback = %d\n", stat.swing_v);
   actualStatus = stat;
+  //тут вставить код который будет менять режим работы кондиционера, желательно функция принимающая ACStatus на вход
   DisPlay.output_status(stat);
+  //Функция MQTT.sendStatus(&stat) отправляет статус на сервер, 
+  //можно использовать в любом месте кода. 
+  //Требуется добавить отправку статуса на сервер при изменении с пульта.
   MQTT.sendStatus(&stat);
 };
  settings_wifi_callback wifi_settings_get_callBack = [](WiFiSettings sett){
@@ -43,11 +42,6 @@ mqtt_status_callback status_callback = [](ACStatus stat){
   
    settings_wifi_callback settings_change_callBack = [](WiFiSettings sett){
     Serial.println("main::settings_change_callBack");
-    // Serial.println(String(sett.wifi_mode));  
-    // Serial.println(sett.wifi_AP_ssid);    
-    // Serial.println(sett.wifi_AP_pass);    
-    // Serial.println(sett.wifi_conn_ssid);    
-    // Serial.println(sett.wifi_conn_pass);    
   };
   
 void setup() {
