@@ -16,18 +16,53 @@ void MQTTClient::reconnect() {
       sendStatus(actualStatus);
       
     } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
+      switch (client.state()){
+        case -4:
+          Serial.println("MQTT_CONNECTION_TIMEOUT");
+          break;
+        case -3:
+          Serial.println("MQTT_CONNECTION_LOST");
+          break;
+        case -2:
+          Serial.println("MQTT_CONNECT_FAILED");
+          break;
+        case 1:
+          Serial.println("MQTT_CONNECT_BAD_PROTOCOL");
+          break;
+        case 2:
+          Serial.println("MQTT_CONNECT_BAD_CLIENT_ID");
+          connectionIsBroken = true;
+          break;
+        case 3:
+          Serial.println("MQTT_CONNECT_UNAVAILABLE");
+          break;
+        case 4:
+          Serial.println("MQTT_CONNECT_BAD_CREDENTIALS");
+          break;
+        case 5:
+          Serial.println("MQTT_CONNECT_UNAUTHORIZED");
+          connectionIsBroken = true;
+          break;      
+        default:
+          Serial.print("failed, rc=");
+          Serial.print(client.state());
+          break;
+      }
+      if (!connectionIsBroken)
+      {        
+        Serial.println(" try again in 3 seconds");
+      }
+            
     }
     }
 }
 
-void MQTTClient::init(const char* mqtt_server_addr, MQTTSettings settings, ACStatus *actStat){
+void MQTTClient::init(const char* mqtt_server_addr, WiFiSettings wifiSettings, MQTTSettings settings, ACStatus *actStat){
   Serial.println("MQTTClient::init");
-    actualStatus = actStat;
     _settings = settings;
+    actualStatus = actStat;
     beforTime = millis();
+    connectionIsBroken = false;
 static const char isrg_root_x1[] PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
 MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
@@ -62,9 +97,10 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 )EOF";
 
-    espClient.setCACert(isrg_root_x1);
-    client.setServer(mqtt_server_addr, 8883);
-    auto callback = [this](char* topic, byte* message, unsigned int length){
+    if (wifiSettings.wifi_mode == WIFI_STA && settings.user_key.length() == 16 && settings.user_password.length() > 0){
+      espClient.setCACert(isrg_root_x1);
+      client.setServer(mqtt_server_addr, 8883);
+      auto callback = [this](char* topic, byte* message, unsigned int length){
         Serial.print("Message arrived on topic: ");
         Serial.print(topic);
         Serial.print(". Message: ");
@@ -89,16 +125,19 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
             Serial.print("doc[status] = ");
             Serial.println(doc["status"].as<String>());
             _statusCallback(stat);
-          }
-    };
-    client.setCallback(callback);    
-    inited = true;
+        }
+      };
+      client.setCallback(callback);    
+      inited = true;
+      Serial.println("MQTTClient::inited");
+    }
+    
 }
 
 void MQTTClient::loop(){
     if( millis() - beforTime >= 500){
         beforTime = millis();
-        if (inited && !client.connected()) {
+        if (!connectionIsBroken && inited && !client.connected()) {
             reconnect();
         }
         client.loop();

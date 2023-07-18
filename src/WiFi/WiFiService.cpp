@@ -7,6 +7,7 @@ void WiFiService::init(WiFiSettings settings){
     beforTime = millis();
     WiFi.disconnect();
     delay(500);
+    connected = false;
     WiFi.mode(settings.wifi_mode);
 
     if(settings.wifi_mode == WIFI_AP){

@@ -21,21 +21,22 @@ mqtt_status_callback status_callback = [](ACStatus stat){
   //Требуется добавить отправку статуса на сервер при изменении с пульта.
   MQTT.sendStatus(&stat);
 };
- settings_wifi_callback wifi_settings_get_callBack = [](WiFiSettings sett){
+ settings_wifi_callback wifi_settings_get_callBack = [](WiFiSettings wifiSettings){
     Serial.println("main::settings_get_callBack");
     
-    wifiConnected wifiCallback = [sett](){    
-      settings_mqtt_callback mqtt_settings_get_callBack = [sett](MQTTSettings settings){
-          
-          if (sett.wifi_mode == WIFI_STA){                
-            MQTT.init("acrem-broker.chescat.pro", settings, &actualStatus);
-          }      
-      };
+    wifiConnected wifiConnectedCallback = [wifiSettings](){    
+        Serial.println("main wifi Connected");
+        settings_mqtt_callback mqtt_settings_get_callBack = [wifiSettings](MQTTSettings settings){   
+
+          MQTT.init("acrem-broker.chescat.pro", wifiSettings, settings, &actualStatus);  
+
+        };
+
       Settings.getMQTTSettings(mqtt_settings_get_callBack);
       LocalAdminServer.init();
     };
-    ACRemWiFi.setConnectedCallback(wifiCallback);
-    ACRemWiFi.init(sett);  
+    ACRemWiFi.setConnectedCallback(wifiConnectedCallback);
+    ACRemWiFi.init(wifiSettings);  
 
     
   };
