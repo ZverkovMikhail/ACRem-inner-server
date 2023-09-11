@@ -9,6 +9,12 @@ const int BUTTON_INPUT = 4;
 bool isClick = false;
 ACStatus actualStatus;
 
+local_admin_status_callback admin_status_callback = [](ACStatus stat){
+  DisPlay.output_status(stat);
+  MQTT.sendStatus(&stat);
+  LocalAdminServer.sendStatus(&stat);
+  actualStatus = stat;
+};
 
 mqtt_status_callback status_callback = [](ACStatus stat){
   String jstr;
@@ -20,6 +26,7 @@ mqtt_status_callback status_callback = [](ACStatus stat){
   //можно использовать в любом месте кода. 
   //Требуется добавить отправку статуса на сервер при изменении с пульта.
   MQTT.sendStatus(&stat);
+  LocalAdminServer.sendStatus(&stat);
 };
  settings_wifi_callback wifi_settings_get_callBack = [](WiFiSettings wifiSettings){
     Serial.println("main::settings_get_callBack");
@@ -33,7 +40,10 @@ mqtt_status_callback status_callback = [](ACStatus stat){
         };
 
       Settings.getMQTTSettings(mqtt_settings_get_callBack);
+
       LocalAdminServer.init();
+      LocalAdminServer.setStatusCallback(admin_status_callback);
+      LocalAdminServer.setActualStatus(&actualStatus);
     };
     ACRemWiFi.setConnectedCallback(wifiConnectedCallback);
     ACRemWiFi.init(wifiSettings);  
@@ -61,6 +71,7 @@ void setup() {
       actualStatus.temp = 20;
       actualStatus.fan = Quiet;
       actualStatus.swing_v = Auto_swing;
+      
   MQTT.setStatusCallback(status_callback);
 }
 

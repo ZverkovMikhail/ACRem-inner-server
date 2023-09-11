@@ -2,6 +2,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include "Pages.h"
+#include "static.h"
 #include "WiFi/WiFiService.h"
 #include "Settings/SettingsHandler.h"
 
@@ -19,7 +20,25 @@ String processor(const String& var)
       Serial.println(WiFi.localIP().toString());
       return WiFi.localIP().toString();
     }
-  } 
+    return String();
+
+  } else if (var == "MAIN_SCRIPT"){
+
+    return main_script;
+
+  } else if (var == "WIFI_SCRIPT"){
+
+    return wifi_script;
+
+  } else if (var == "MQTT_SCRIPT"){
+
+    return mqtt_script;
+
+  }else if (var == "STYLE"){
+
+    return css;
+
+  }
   return String();
 }
 
