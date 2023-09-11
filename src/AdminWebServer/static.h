@@ -50,6 +50,7 @@ svg {
   justify-content: space-between;
   max-width: 414px;
   height: 100vh;
+  box-shadow: 5px 5px 9px #374662, -5px -5px 9px #4b5e84;
   overflow-x: hidden;
   margin: 0 auto;
   padding: 32px 32px 42px 32px;
@@ -398,7 +399,6 @@ button:focus, input:focus {
   .container {
     height: fit-content;
     width: 300px;
-    box-shadow: 5px 5px 9px #374662, -5px -5px 9px #4b5e84;
     border-radius: 40px;
     margin: 0;
     padding: 24px 24px 32px 24px;
@@ -740,8 +740,8 @@ class ControlsHandler {
     addControl(statusName, buttonId, displayId, controlStates, controlStateDefault) {
         const control = new Control(
             statusName,
-            document.querySelector(`#%${buttonId}`),
-            document.querySelector(`#%${displayId}`),
+            document.querySelector(`#${buttonId}`),
+            document.querySelector(`#${displayId}`),
             controlStates,
             this.controlList
         );
@@ -770,7 +770,7 @@ class API {
             this.socket.close()
             this.socket = null;
         }
-        this.socket = new WebSocket(`ws://%${this.ip}/%${this.version}/%${this.first}/%${this.second}`);
+        this.socket = new WebSocket(`ws://${this.ip}/${this.version}/${this.first}/${this.second}`);
         this.socket.onopen = this._onopen.bind(this);
         this.socket.onmessage = this._onmessage.bind(this);
         this.socket.onclose = this._onclose.bind(this);
@@ -802,12 +802,12 @@ class API {
                 }
                 break;
             case 'status':
-                console.log(`controlsHandler.status = %${controlsHandler.status}`);
+                console.log(`controlsHandler.status = ${controlsHandler.status}`);
                 msg = controlsHandler.status;
                 break;
 
         }
-        console.log(`sendToServer::msg = %${msg}`);
+        console.log(`sendToServer::msg = ${msg}`);
         this.socket.send(JSON.stringify(msg));
     }
 
@@ -819,12 +819,12 @@ class API {
     }
 
     _onopen(e) {
-        this.msgBox.sendInfo(`Подключение к %${this.ip} прошло успешно!!!`).timeout(5000);
+        this.msgBox.sendInfo(`Подключение к ${this.ip} прошло успешно!!!`).timeout(5000);
     }
 
     _onclose(event) {
         if (event.wasClean) {
-            console.log(`[close] Connection closed cleanly, code=%${event.code} reason=%${event.reason}`);
+            console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
         } else {
             this.msgBox.sendError('Разрыв соединения!!! попробуйте обновить страницу!');
             console.log('[close] Connection died');
@@ -833,7 +833,7 @@ class API {
     }
 
     _onmessage(event) {
-        console.log(`[message] Data received from server: %${event.data}`);
+        console.log(`[message] Data received from server: ${event.data}`);
         const msg = JSON.parse(event.data);
 
         if (msg.hasOwnProperty('status')) {
@@ -852,7 +852,7 @@ class API {
             document.querySelector("#conn_pass_id").value = msg.wifi.conn_pass;
         }
         if (msg.hasOwnProperty('message')) {
-            console.log(`msg.answer.error: %${msg.message.error}`);
+            console.log(`msg.answer.error: ${msg.message.error}`);
             switch (msg.message.type) {
                 case 'i':
                     this.msgBox.sendInfo(msg.message.text).timeout(3000);
@@ -941,16 +941,6 @@ const char index_script[] PROGMEM = R"rawliteral(
         .addControl('fan', 'fan-btn-id', 'fan-display-id', fanControlStates)
         .onNewStatus = (status) => {
         console.log(status);
-    };
-
-    controlsHandler.status = {
-        'status': {
-            'power': 'o',
-            'temp': 20,
-            'swing_v': 'h',
-            'mode': 'c',
-            'fan': 'M',
-        }
     };
     const msgBox = new MessageBox();
     const api = new API(globalIP, 'v1', 'control', 'status', msgBox);

@@ -26,6 +26,10 @@ String processor(const String& var)
 
     return main_script;
 
+  } else if (var == "INDEX_SCRIPT"){
+
+    return index_script;
+
   } else if (var == "WIFI_SCRIPT"){
 
     return wifi_script;
